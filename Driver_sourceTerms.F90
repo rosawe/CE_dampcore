@@ -49,7 +49,7 @@ subroutine Driver_sourceTerms(blockCount, blockList, dt, pass)
         sim_kind, sim_windVelocity, sim_windMdot, sim_windTemperature, sim_windNCells, &
         sim_fixedPartTag, sim_windKernel, sim_cylinderType, sim_orbEcc, sim_periDist, &
         sim_tDelay, sim_mpoleVX, sim_mpoleVY, sim_mpoleVZ, sim_smallT, &
-        sim_startDistance, sim_fixedParticle, sim_vyi, sim_startY
+        sim_startDistance, sim_fixedParticle, sim_dampRadius
     use Grid_interface, ONLY : Grid_getBlkIndexLimits, Grid_getBlkPtr, Grid_releaseBlkPtr,&
         Grid_getCellCoords, Grid_putPointData, Grid_getMinCellSize, Grid_fillGuardCells
     use PhysicalConstants_interface, ONLY : PhysicalConstants_get
@@ -143,8 +143,11 @@ subroutine Driver_sourceTerms(blockCount, blockList, dt, pass)
     endif
 
     !print *, 'mpole vels', sim_mpoleVX, sim_mpoleVY, sim_mpoleVZ
+
+    ! 2/9/22 RWE applied the relaxation in this loop within sim_dampRadius in the else loop
     if (dr_simTime .lt. tinitial + sim_tRelax) then
         relax_rate = max(0.0d0, dr_simTime - sim_tSpinup)/(sim_tRelax - sim_tSpinup)*(1.0 - sim_relaxRate) + sim_relaxRate 
+        ! is tSpinup the dynamical time of the star?
         if (sim_kind .eq. "polytrope") then
             do lb = 1, blockCount
                 call Grid_getBlkIndexLimits(blockList(lb),blkLimits,blkLimitsGC)
@@ -277,13 +280,28 @@ subroutine Driver_sourceTerms(blockCount, blockList, dt, pass)
             call Grid_getCellCoords(IAXIS, blockList(lb), CENTER, gcell, xCoord, sizeX)
             call Grid_getBlkPtr(blockList(lb),solnData)
 
+            ! 2/9/22 RWE inserted relaxation at dist < sim_dampRadius in here
             if (sim_kind .eq. 'polytrope') then
                 do k = blkLimits(LOW, KAXIS), blkLimits(HIGH, KAXIS)
+                    zz = zCoord(k) - sim_zCenter
                     do j = blkLimits(LOW, JAXIS), blkLimits(HIGH, JAXIS)
+                        yy = yCoord(j) -  sim_yCenter
                         do i = blkLimits(LOW, IAXIS), blkLimits(HIGH, IAXIS)
+                            xx = xCoord(i) - sim_xCenter
+
                             solnData(VELX_VAR,i,j,k) = solnData(VELX_VAR,i,j,k) - sim_mpoleVX
                             solnData(VELY_VAR,i,j,k) = solnData(VELY_VAR,i,j,k) - sim_mpoleVY
                             solnData(VELZ_VAR,i,j,k) = solnData(VELZ_VAR,i,j,k) - sim_mpoleVZ
+
+                            ! calculate distance from COM
+                            dist = dsqrt(xx**2. + yy**2. + zz**2.)
+
+                            ! apply relaxation within calculated radius
+                            if (dist .le. sim_dampRadius) then
+                                solnData(VELX_VAR,i,j,k) = solnData(VELX_VAR,i,j,k)*relax_rate
+                                solnData(VELY_VAR,i,j,k) = solnData(VELY_VAR,i,j,k)*relax_rate
+                                solnData(VELZ_VAR,i,j,k) = solnData(VELZ_VAR,i,j,k)*relax_rate
+                            endif
 
                             solnData(ENER_VAR,i,j,k) = solnData(EINT_VAR,i,j,k) + &
                                 0.5*(solnData(VELX_VAR,i,j,k)**2. + solnData(VELY_VAR,i,j,k)**2. + solnData(VELZ_VAR,i,j,k)**2.)

@@ -80,7 +80,10 @@ module Simulation_data
 
   double precision, save    :: grv_cfl
 
-  double precision, save    :: sim_vxi, sim_vyi, sim_vzi, sim_startY
+  double precision, save    :: sim_vxi, sim_vyi, sim_vzi, sim_startY, sim_startX, sim_refine_radius_factor
   integer, save             :: sim_lastRow
+
+  !! 2/8/22 added damping radius, should be added to flash.par as the greater of (core radius, 2.5x minimum cell size)
+  double precision, save :: sim_dampRadius
 
 end module Simulation_data

@@ -1,0 +1,20 @@
+#!/bin/bash
+#SBATCH --job-name=CE_test
+#SBATCH --nodes=15
+#SBATCH --ntasks-per-node=32
+#SBATCH --ntasks-per-core=1
+#SBATCH --mem-per-cpu=2900
+#SBATCH --time=2-00:00:00
+#SBATCH --partition=dark
+
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=rosa@ucsc.edu
+
+module purge
+module load intel/15.0.1  
+module load intelmpi/5.0.2.044
+
+EXE="/groups/dark/rosa/FLASH4.3/obj_CE/flash4"
+INPUT="/storage/dark/rosa/FLASH4.3/CE_base/flash.par"
+
+srun $EXE -par_file $INPUT -i --preserve-env
