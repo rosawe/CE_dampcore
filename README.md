@@ -1,25 +1,25 @@
-Code originally written by James Guillochon. README last updated 11/24/2015.
+Code originally written by James Guillochon, with additions from Jamie Law-Smith, Samantha Wu, and Rosa Wallace Everson. README last updated 2/9/2022 by RWE.
 
-This simulation setup allows one to simulate the interaction between an extended, polytropic object and a point mass. The code now utilizes the Sinks module to integrate particle trajectories, which brings the benefit of being able to include an arbitrary number of point-like perturbers. The code has been tested to work with FLASH 4.2.2, and is currently being tested with FLASH 4.3, the latest version.
+This simulation setup allows one to simulate the interaction between an extended, polytropic object or stellar profile and a point mass. The code now utilizes the Sinks module to integrate particle trajectories, which brings the benefit of being able to include an arbitrary number of point-like perturbers. This version has been used to simulate common envelope interactions between massive, extended, post-main sequence stars and compact companions. Any 1D stellar profile can be used to provide the star's structure, as long as the output is formatted correctly. The code has been used successfully with FLASH 4.3, but should not be used with FLASH 4.5.
 
 To install, clone this repository to the Simulation path within the FLASH hierarchy:
 
 	cd /path/to/flash/directory/FLASH4.3/source/Simulation/SimulationMain
-	hg clone ssh://hg@bitbucket.org/Guillochon/multitidal
+	gh repo clone rosawe/CE_dampcore
 
-Then, change back to the main FLASH directory and run the setup script. A recommended setup for the default parameters are (for pure hydro):
+Then, change back to the main FLASH directory and run the setup script. I recommend the following setup:
 
 	cd /path/to/flash/directory/FLASH4.3
-	./setup MultiTidal -noclobber -maxblocks=1000 -auto -3d -objdir=object_multitidal +newMpole +uhd
+	./setup CE_dampcore -noclobber -maxblocks=2000 -nxb=8 -nyb=8 -nzb=8 -auto -3d -objdir=object_CE_dampcore +newMpole +parallelIO +uhd loadProfile=True
 
-Within this repository are a number of "example" run directories that contain files that need to be included when running this setup under various conditions. The example folder that corresponds to the setup line above is `example_setup`, make a full copy of this folder to the location you intend to produce the FLASH outputs.
+Within this repository are a number of "example" run directories that contain files that need to be included when running this setup under various conditions. The example folder that corresponds to the setup line above is `example_damped_core`, make a full copy of this folder to the location you intend to produce the FLASH outputs. In the output folder, you will also need to include a data file containing your stellar profile.
 
-	cp -R /path/to/flash/directory/FLASH4.3/source/Simulation/SimulationMain/multitidal/example_setup /desired/run/location/.
+	cp -R /path/to/flash/directory/FLASH4.3/source/Simulation/SimulationMain/multitidal/example_damped_core /desired/run/location/.
 
 Then, to run FLASH, use `mpirun` (or similar) from that run directory, e.g.
 
 	cd /desired/run/location
-	mpirun -np 4 /path/to/flash/directory/FLASH4.3/object_multitidal/flash4
+	mpirun -np 4 /path/to/flash/directory/FLASH4.3/object_CE_dampcore/flash4
 
 To add additional physics/features, the user needs to modify the setup line above and use a run directory appropriate to that setup:
 
