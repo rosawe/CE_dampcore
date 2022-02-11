@@ -86,4 +86,7 @@ module Simulation_data
   !! 2/8/22 added damping radius, should be added to flash.par as the greater of (core radius, 2.5x minimum cell size)
   double precision, save :: sim_dampRadius
 
+  !! 2/11/22 added damping coefficient, separate from original relaxation scheme
+  double precision, save :: sim_coreDampCoeff
+
 end module Simulation_data

@@ -154,6 +154,7 @@ subroutine Simulation_init()
     call RuntimeParameters_get("sim_refine_radius_factor", sim_refine_radius_factor)
 
     call RuntimeParameters_get("sim_dampRadius", sim_dampRadius) ! 2/8/22 added
+    call RuntimeParameters_get("sim_coreDampCoeff", sim_coreDampCoeff) ! 2/11/22 added
 
     if (sim_powerLawExponent .le. -3.d0) then
         call Driver_abortFlash('Error: sim_powerLawExponent must be greater than -3.0')

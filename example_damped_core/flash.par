@@ -80,6 +80,9 @@ sim_lastRow = 5059
 # 2/9/22 damped core region, prevents shocks in extended stars, should be >= 2.5 min cell size
 sim_dampRadius = 0.0
 
+# 2/11/22 damping coefficient for core region only, should be <= 1.0 (1.0 is no damping)
+sim_coreDampCoeff = 0.5
+
 # Zero out acceleration about one of the particles (1: resolved object, 2+: one of the pt. masses)
 sim_fixedParticle = 1
 

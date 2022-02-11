@@ -49,7 +49,7 @@ subroutine Driver_sourceTerms(blockCount, blockList, dt, pass)
         sim_kind, sim_windVelocity, sim_windMdot, sim_windTemperature, sim_windNCells, &
         sim_fixedPartTag, sim_windKernel, sim_cylinderType, sim_orbEcc, sim_periDist, &
         sim_tDelay, sim_mpoleVX, sim_mpoleVY, sim_mpoleVZ, sim_smallT, &
-        sim_startDistance, sim_fixedParticle, sim_dampRadius
+        sim_startDistance, sim_fixedParticle, sim_dampRadius, sim_coreDampCoeff
     use Grid_interface, ONLY : Grid_getBlkIndexLimits, Grid_getBlkPtr, Grid_releaseBlkPtr,&
         Grid_getCellCoords, Grid_putPointData, Grid_getMinCellSize, Grid_fillGuardCells
     use PhysicalConstants_interface, ONLY : PhysicalConstants_get
@@ -200,9 +200,21 @@ subroutine Driver_sourceTerms(blockCount, blockList, dt, pass)
                                 solnData(VELY_VAR,i,j,k) =  dcos(rotang)*velprojy + dsin(rotang)*velprojz
                                 solnData(VELZ_VAR,i,j,k) = -dsin(rotang)*velprojy + dcos(rotang)*velprojz
                             else
-                                solnData(VELX_VAR,i,j,k) = solnData(VELX_VAR,i,j,k)*relax_rate
-                                solnData(VELY_VAR,i,j,k) = solnData(VELY_VAR,i,j,k)*relax_rate
-                                solnData(VELZ_VAR,i,j,k) = solnData(VELZ_VAR,i,j,k)*relax_rate
+                                ! calculate distance from COM
+                                zz = zCoord(k) - sim_zCenter
+                                yy = yCoord(j) - sim_yCenter
+                                xx = xCoord(i) - sim_xCenter
+                                dist = dsqrt(xx**2. + yy**2. + zz**2.)
+                                ! apply relaxation within calculated radius
+                                if (dist .le. sim_dampRadius) then
+                                    solnData(VELX_VAR,i,j,k) = solnData(VELX_VAR,i,j,k)*sim_coreDampCoeff
+                                    solnData(VELY_VAR,i,j,k) = solnData(VELY_VAR,i,j,k)*sim_coreDampCoeff
+                                    solnData(VELZ_VAR,i,j,k) = solnData(VELZ_VAR,i,j,k)*sim_coreDampCoeff
+                                else
+                                    solnData(VELX_VAR,i,j,k) = solnData(VELX_VAR,i,j,k)*relax_rate
+                                    solnData(VELY_VAR,i,j,k) = solnData(VELY_VAR,i,j,k)*relax_rate
+                                    solnData(VELZ_VAR,i,j,k) = solnData(VELZ_VAR,i,j,k)*relax_rate
+                                endif
                             endif
 
                             solnData(ENER_VAR,i,j,k) = solnData(EINT_VAR,i,j,k) + &
@@ -283,24 +295,24 @@ subroutine Driver_sourceTerms(blockCount, blockList, dt, pass)
             ! 2/9/22 RWE inserted relaxation at dist < sim_dampRadius in here
             if (sim_kind .eq. 'polytrope') then
                 do k = blkLimits(LOW, KAXIS), blkLimits(HIGH, KAXIS)
-                    zz = zCoord(k) - sim_zCenter
                     do j = blkLimits(LOW, JAXIS), blkLimits(HIGH, JAXIS)
-                        yy = yCoord(j) -  sim_yCenter
                         do i = blkLimits(LOW, IAXIS), blkLimits(HIGH, IAXIS)
-                            xx = xCoord(i) - sim_xCenter
 
                             solnData(VELX_VAR,i,j,k) = solnData(VELX_VAR,i,j,k) - sim_mpoleVX
                             solnData(VELY_VAR,i,j,k) = solnData(VELY_VAR,i,j,k) - sim_mpoleVY
                             solnData(VELZ_VAR,i,j,k) = solnData(VELZ_VAR,i,j,k) - sim_mpoleVZ
 
                             ! calculate distance from COM
+                            zz = zCoord(k) - sim_zCenter
+                            yy = yCoord(j) - sim_yCenter
+                            xx = xCoord(i) - sim_xCenter
                             dist = dsqrt(xx**2. + yy**2. + zz**2.)
 
                             ! apply relaxation within calculated radius
                             if (dist .le. sim_dampRadius) then
-                                solnData(VELX_VAR,i,j,k) = solnData(VELX_VAR,i,j,k)*relax_rate
-                                solnData(VELY_VAR,i,j,k) = solnData(VELY_VAR,i,j,k)*relax_rate
-                                solnData(VELZ_VAR,i,j,k) = solnData(VELZ_VAR,i,j,k)*relax_rate
+                                solnData(VELX_VAR,i,j,k) = solnData(VELX_VAR,i,j,k)*sim_coreDampCoeff
+                                solnData(VELY_VAR,i,j,k) = solnData(VELY_VAR,i,j,k)*sim_coreDampCoeff
+                                solnData(VELZ_VAR,i,j,k) = solnData(VELZ_VAR,i,j,k)*sim_coreDampCoeff
                             endif
 
                             solnData(ENER_VAR,i,j,k) = solnData(EINT_VAR,i,j,k) + &

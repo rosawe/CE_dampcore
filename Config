@@ -66,9 +66,6 @@ ENDIF
 LINKIF eos_initHelmholtz.F90  physics/Eos/EosMain/Helmholtz
 LINKIF eos_helmData.F90       physics/Eos/EosMain/Helmholtz
 
-# 2/8/22 RWE added parameter for damping region radius, the area around core that we want to prevent shock formation
-PARAMETER sim_dampRadius            REAL    0.E0
-
 PARAMETER sim_xCenter               REAL    0.E0
 PARAMETER sim_yCenter               REAL    0.E0
 PARAMETER sim_zCenter               REAL    0.E0
@@ -137,6 +134,12 @@ PARAMETER sim_startY                REAL    0.E0
 PARAMETER sim_lastRow               INTEGER 0
 PARAMETER sim_refine_radius_factor  REAL    1.E0
 # End parameters for merger
+
+# 2/8/22 RWE added parameter for damping region radius, the area around core that we want to prevent shock formation
+PARAMETER sim_dampRadius            REAL    0.E0
+
+# 2/11/22 RWE added parameter for core damping rate, separate from standard relax_rate schemes
+PARAMETER  sim_coreDampCoeff        REAL    0.99
 
 PARAMETER refinement_type     STRING  "rel_to_max"
 PARAMETER sim_kind            STRING  "polytrope"
